@@ -1,149 +1,164 @@
-// ==============================================
-// NAVIGATION FOUNDATION FOR NIKHIL
-// ==============================================
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { colors } from '../../styles/colors';
+import { authService } from '../../services/authService';
 
-// src/navigation/AuthNavigator.js
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import LoginScreen from '../screens/auth/LoginScreen';
-import RegisterScreen from '../screens/auth/RegisterScreen';
+const LoginScreen = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-const Stack = createStackNavigator();
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
-const AuthNavigator = () => {
+    setLoading(true);
+    try {
+      const { data, error } = await authService.signIn(email, password);
+      if (error) {
+        Alert.alert('Login Failed', error.message);
+      }
+      // Success will be handled by AppNavigator listening to auth state
+    } catch (error) {
+      Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const navigateToRegister = () => {
+    navigation.navigate('Register');
+  };
+
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-    </Stack.Navigator>
+      <View style={styles.content}>
+        <Text style={styles.title}>Welcome to MyGymBro</Text>
+        <Text style={styles.subtitle}>Sign in to continue</Text>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.textSecondary}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={colors.textSecondary}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={navigateToRegister}>
+            <Text style={styles.registerLink}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
-export default AuthNavigator;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  inputContainer: {
+    marginBottom: 30,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    marginBottom: 16,
+  },
+  loginButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
+  loginButtonText: {
+    color: colors.surface,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  registerText: {
+    color: colors.textSecondary,
+    fontSize: 16,
+  },
+  registerLink: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
-// ==============================================
-// src/navigation/TabNavigator.js
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-// Import screens
-import DashboardScreen from '../screens/dashboard/DashboardScreen';
-import WorkoutListScreen from '../screens/workouts/WorkoutListScreen';
-import AddWorkoutScreen from '../screens/workouts/AddWorkoutScreen';
-import NutritionScreen from '../screens/nutrition/NutritionScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
-
-import { colors } from '../styles/colors';
-
-const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
-
-// Workout Stack Navigator
-const WorkoutStack = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="WorkoutList" 
-        component={WorkoutListScreen}
-        options={{ title: 'Workouts' }}
-      />
-      <Stack.Screen 
-        name="AddWorkout" 
-        component={AddWorkoutScreen}
-        options={{ title: 'Add Workout' }}
-      />
-    </Stack.Navigator>
-  );
-};
-
-const TabNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          switch (route.name) {
-            case 'Dashboard':
-              iconName = 'dashboard';
-              break;
-            case 'Workouts':
-              iconName = 'fitness-center';
-              break;
-            case 'Nutrition':
-              iconName = 'restaurant';
-              break;
-            case 'Profile':
-              iconName = 'person';
-              break;
-            default:
-              iconName = 'circle';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-        },
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Workouts" component={WorkoutStack} />
-      <Tab.Screen name="Nutrition" component={NutritionScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-};
-
-export default TabNavigator;
-
-// ==============================================
-// FOLDER STRUCTURE FOR NIKHIL TO CREATE:
-// ==============================================
-
-/*
-Create these folders and files in your src directory:
-
-src/
-├── screens/
-│   ├── auth/
-│   │   ├── LoginScreen.js
-│   │   └── RegisterScreen.js
-│   ├── dashboard/
-│   │   └── DashboardScreen.js
-│   ├── workouts/
-│   │   ├── WorkoutListScreen.js
-│   │   └── AddWorkoutScreen.js
-│   ├── nutrition/
-│   │   └── NutritionScreen.js
-│   ├── profile/
-│   │   └── ProfileScreen.js
-│   └── LoadingScreen.js
-├── navigation/
-│   ├── AuthNavigator.js
-│   └── TabNavigator.js
-└── components/
-    ├── common/
-    ├── workouts/
-    ├── nutrition/
-    └── profile/
-
-NIKHIL'S TASKS:
-1. Create all the screen files with the foundation code above
-2. Build out the UI components for each screen
-3. Add forms, buttons, lists, and user interactions
-4. Connect to the Supabase services that are already set up
-5. Add proper navigation between screens
-6. Style everything according to the design system
-
-The services (authService, workoutService, nutritionService) are already built and ready to use!
-*/
+export default LoginScreen;
