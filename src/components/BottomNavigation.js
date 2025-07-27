@@ -18,15 +18,16 @@ const getResponsiveSize = () => {
   
   return {
     navHeight: isSmallScreen ? 50 : isMediumScreen ? 55 : 60,
+    navWidth: Math.min(width * 0.75, 300), // 75% of screen width, max 300px
     bottomPadding: Platform.OS === 'ios' ? 
       (isSmallScreen ? 15 : isMediumScreen ? 18 : 20) : 
       (isSmallScreen ? 6 : isMediumScreen ? 7 : 8),
     topPadding: isSmallScreen ? 4 : isMediumScreen ? 5 : 6,
     iconSize: isSmallScreen ? 16 : isMediumScreen ? 17 : 18,
     fontSize: isSmallScreen ? 8 : isMediumScreen ? 8.5 : 9,
-    buttonWidth: isSmallScreen ? 45 : isMediumScreen ? 47 : 50,
-    borderRadius: isSmallScreen ? 18 : isMediumScreen ? 19 : 20,
-    horizontalPadding: Math.max(10, width * 0.025), // 2.5% of screen width, minimum 10
+    buttonWidth: isSmallScreen ? 40 : isMediumScreen ? 42 : 45, // Smaller for tighter spacing
+    borderRadius: isSmallScreen ? 18 : isMediumScreen ? 20 : 22,
+    horizontalPadding: isSmallScreen ? 15 : isMediumScreen ? 18 : 20,
   };
 };
 
@@ -51,12 +52,12 @@ const BottomNavigation = ({ onTabPress }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.navBar, {
+        width: responsiveSize.navWidth,
         height: responsiveSize.navHeight,
         paddingTop: responsiveSize.topPadding,
         paddingBottom: responsiveSize.bottomPadding,
         paddingHorizontal: responsiveSize.horizontalPadding,
-        borderTopLeftRadius: responsiveSize.borderRadius,
-        borderTopRightRadius: responsiveSize.borderRadius,
+        borderRadius: responsiveSize.borderRadius,
       }]}>
         {tabs.map((tab) => (
           <TouchableOpacity
@@ -65,7 +66,7 @@ const BottomNavigation = ({ onTabPress }) => {
               styles.tabButton,
               {
                 minWidth: responsiveSize.buttonWidth,
-                borderRadius: responsiveSize.borderRadius * 0.5,
+                borderRadius: responsiveSize.borderRadius * 0.4,
               },
               activeTab === tab.id && styles.activeTab,
             ]}
@@ -101,10 +102,12 @@ const BottomNavigation = ({ onTabPress }) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 20, // Float above bottom
+    left: 20,   // Float away from left edge
+    right: 20,  // Float away from right edge
     zIndex: 1000,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navBar: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
@@ -114,21 +117,23 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -3,
+      height: 5,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 15,
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 20,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly', // Even spacing between icons
     alignItems: 'center',
+    alignSelf: 'center',
   },
   tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6, // Tighter horizontal padding
     position: 'relative',
+    flex: 1, // Equal distribution of space
   },
   activeTab: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
