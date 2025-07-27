@@ -36,7 +36,6 @@ export default function App() {
   const handleTabPress = (tabId) => {
     console.log('Tab pressed:', tabId);
     setCurrentTab(tabId);
-    Alert.alert('Tab Pressed', `You tapped ${tabId}!`);
   };
 
   // ---------- auth actions ----------

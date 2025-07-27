@@ -1,4 +1,3 @@
-// src/components/BottomNavigation.js
 import React, { useState } from 'react';
 import {
   View,
@@ -14,7 +13,6 @@ const { width } = Dimensions.get('window');
 const BottomNavigation = ({ onTabPress }) => {
   const [activeTab, setActiveTab] = useState('Dashboard');
 
-  // Simple tabs configuration - easy to modify
   const tabs = [
     { id: 'Dashboard', label: 'Home', icon: '📊' },
     { id: 'Workouts', label: 'Workouts', icon: '💪' },
@@ -24,7 +22,6 @@ const BottomNavigation = ({ onTabPress }) => {
 
   const handleTabPress = (tabId) => {
     setActiveTab(tabId);
-    // Call the function passed from parent to handle navigation
     if (onTabPress) {
       onTabPress(tabId);
     }
@@ -72,43 +69,44 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   navBar: {
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -10,
+      height: -5,
     },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 25,
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 20,
     flexDirection: 'row',
-    paddingTop: 15,
-    paddingBottom: Platform.OS === 'ios' ? 35 : 20,
-    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 25 : 12,
+    paddingHorizontal: 8,
     justifyContent: 'space-around',
     alignItems: 'center',
+    height: Platform.OS === 'ios' ? 75 : 60,
   },
   tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    minWidth: 70,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    minWidth: 55,
     position: 'relative',
   },
   activeTab: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    transform: [{ scale: 1.1 }],
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    transform: [{ scale: 1.05 }],
   },
   icon: {
-    fontSize: 24,
-    marginBottom: 5,
-    opacity: 0.7,
+    fontSize: 20,
+    marginBottom: 3,
+    opacity: 0.65,
   },
   activeIcon: {
     opacity: 1,
@@ -117,8 +115,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   label: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.65)',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -128,15 +126,15 @@ const styles = StyleSheet.create({
   },
   activeIndicator: {
     position: 'absolute',
-    bottom: 2,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    bottom: 1,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     shadowColor: 'rgba(255, 255, 255, 0.9)',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 6,
+    shadowRadius: 3,
   },
 });
 
