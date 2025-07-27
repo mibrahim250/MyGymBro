@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import {
   View,
   TouchableOpacity,
@@ -10,30 +10,30 @@ import {
   Vibration,
 } from 'react-native';
 
+const { useState, useRef } = React;
 const { width, height } = Dimensions.get('window');
 
 // Dynamic sizing based on screen size
 const getResponsiveSize = () => {
-  const isSmallScreen = width < 375; // iPhone SE, small phones
-  const isMediumScreen = width >= 375 && width < 414; // iPhone 12/13/14
-  const isLargeScreen = width >= 414; // iPhone Plus, Pro Max, tablets
+  const isSmallScreen = width < 375;
+  const isMediumScreen = width >= 375 && width < 414;
+  const isLargeScreen = width >= 414;
   
   return {
-    navHeight: isSmallScreen ? 65 : isMediumScreen ? 70 : 75, // Taller like dock
-    navWidth: Math.min(width * 0.85, 320), // 85% of screen width, max 320px (wider)
+    navHeight: isSmallScreen ? 65 : isMediumScreen ? 70 : 75,
+    navWidth: Math.min(width * 0.85, 320),
     bottomPadding: isSmallScreen ? 12 : isMediumScreen ? 14 : 16,
     topPadding: isSmallScreen ? 12 : isMediumScreen ? 14 : 16,
-    iconSize: isSmallScreen ? 22 : isMediumScreen ? 24 : 26, // Bigger icons like dock
+    iconSize: isSmallScreen ? 22 : isMediumScreen ? 24 : 26,
     fontSize: isSmallScreen ? 9 : isMediumScreen ? 10 : 11,
-    buttonSize: isSmallScreen ? 50 : isMediumScreen ? 55 : 60, // Square buttons like dock
-    borderRadius: 25, // More rounded like macOS dock
+    buttonSize: isSmallScreen ? 50 : isMediumScreen ? 55 : 60,
+    borderRadius: 25,
     horizontalPadding: isSmallScreen ? 18 : isMediumScreen ? 22 : 25,
   };
 };
 
 const BottomNavigation = ({ onTabPress }) => {
   const [activeTab, setActiveTab] = useState('Dashboard');
-  const [isVisible, setIsVisible] = useState(false);
   const responsiveSize = getResponsiveSize();
 
   // Animation values for each tab
@@ -52,74 +52,20 @@ const BottomNavigation = ({ onTabPress }) => {
     Profile: new Animated.Value(0),
   }).current;
 
-  // Glow effect animations
-  const glowAnimations = useRef({
-    Dashboard: new Animated.Value(0),
-    Workouts: new Animated.Value(0),
-    Nutrition: new Animated.Value(0),
-    Profile: new Animated.Value(0),
-  }).current;
-
-  // Sliding indicator animation
-  const indicatorPosition = useRef(new Animated.Value(0)).current;
-  const navBarOpacity = useRef(new Animated.Value(0)).current;
-  const navBarScale = useRef(new Animated.Value(0.8)).current;
-
   const tabs = [
-    { id: 'Dashboard', label: 'Home', icon: '📊', sound: 'click1' },
-    { id: 'Workouts', label: 'Workouts', icon: '💪', sound: 'click2' },
-    { id: 'Nutrition', label: 'Nutrition', icon: '🥗', sound: 'click3' },
-    { id: 'Profile', label: 'Profile', icon: '👤', sound: 'click4' }
+    { id: 'Dashboard', label: 'Home', icon: '📊' },
+    { id: 'Workouts', label: 'Workouts', icon: '💪' },
+    { id: 'Nutrition', label: 'Nutrition', icon: '🥗' },
+    { id: 'Profile', label: 'Profile', icon: '👤' }
   ];
-
-  // Entrance animation on mount
-  useEffect(() => {
-    setIsVisible(true);
-    Animated.parallel([
-      Animated.spring(navBarOpacity, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(navBarScale, {
-        toValue: 1,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Staggered icon entrance
-    tabs.forEach((tab, index) => {
-      setTimeout(() => {
-        Animated.spring(tabAnimations[tab.id], {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }).start();
-      }, 100 + index * 100);
-    });
-  }, []);
 
   // Haptic feedback function
   const triggerHaptic = (type = 'light') => {
     if (Platform.OS === 'ios') {
-      const HapticFeedback = require('react-native').Haptics || Vibration;
-      if (HapticFeedback.trigger) {
-        HapticFeedback.trigger(type);
-      } else {
-        Vibration.vibrate(type === 'light' ? 10 : type === 'medium' ? 20 : 50);
-      }
+      Vibration.vibrate(type === 'light' ? 10 : type === 'medium' ? 20 : 50);
     } else {
       Vibration.vibrate(type === 'light' ? 25 : type === 'medium' ? 50 : 100);
     }
-  };
-
-  // Sound effect function (mock - you'd need react-native-sound for real sounds)
-  const playSound = (soundType) => {
-    // Mock sound - in real app you'd use react-native-sound
-    console.log(`🔊 Playing sound: ${soundType}`);
   };
 
   // Ripple effect
@@ -134,35 +80,9 @@ const BottomNavigation = ({ onTabPress }) => {
     });
   };
 
-  // Glow effect
-  const createGlow = (tabId, isActive) => {
-    Animated.timing(glowAnimations[tabId], {
-      toValue: isActive ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Update sliding indicator position
-  const updateIndicatorPosition = (tabIndex) => {
-    const newPosition = (tabIndex * responsiveSize.navWidth) / tabs.length;
-    Animated.spring(indicatorPosition, {
-      toValue: newPosition,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const handleTabPress = (tabId) => {
-    const tabIndex = tabs.findIndex(tab => tab.id === tabId);
-    const currentTab = tabs.find(tab => tab.id === tabId);
-    
     // Haptic feedback
     triggerHaptic(activeTab === tabId ? 'medium' : 'light');
-    
-    // Sound effect
-    playSound(currentTab.sound);
     
     // Create ripple effect
     createRipple(tabId);
@@ -181,14 +101,6 @@ const BottomNavigation = ({ onTabPress }) => {
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Update glow effects
-    Object.keys(glowAnimations).forEach(key => {
-      createGlow(key, key === tabId);
-    });
-
-    // Update sliding indicator
-    updateIndicatorPosition(tabIndex);
     
     // Set active tab
     setActiveTab(tabId);
@@ -238,7 +150,7 @@ const BottomNavigation = ({ onTabPress }) => {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[
+      <View style={[
         styles.navBar, 
         {
           width: responsiveSize.navWidth,
@@ -247,30 +159,8 @@ const BottomNavigation = ({ onTabPress }) => {
           paddingBottom: responsiveSize.bottomPadding,
           paddingHorizontal: responsiveSize.horizontalPadding,
           borderRadius: responsiveSize.borderRadius,
-          opacity: navBarOpacity,
-          transform: [{ scale: navBarScale }],
         }
       ]}>
-        {/* Sliding indicator background */}
-        <Animated.View
-          style={[
-            styles.slidingIndicator,
-            {
-              width: responsiveSize.buttonSize + 8,
-              height: responsiveSize.buttonSize + 8,
-              borderRadius: responsiveSize.borderRadius * 0.6,
-              transform: [
-                {
-                  translateX: indicatorPosition.interpolate({
-                    inputRange: [0, responsiveSize.navWidth],
-                    outputRange: [0, responsiveSize.navWidth / tabs.length - responsiveSize.buttonSize / 2],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
-        
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           
@@ -284,6 +174,7 @@ const BottomNavigation = ({ onTabPress }) => {
                   height: responsiveSize.buttonSize,
                   borderRadius: responsiveSize.borderRadius * 0.6,
                 },
+                isActive && styles.activeTab,
               ]}
               onPress={() => handleTabPress(tab.id)}
               onLongPress={() => handleLongPress(tab.id)}
@@ -316,22 +207,6 @@ const BottomNavigation = ({ onTabPress }) => {
                 ]}
               />
               
-              {/* Glow effect */}
-              <Animated.View
-                style={[
-                  styles.glowEffect,
-                  {
-                    width: responsiveSize.buttonSize + 20,
-                    height: responsiveSize.buttonSize + 20,
-                    borderRadius: responsiveSize.buttonSize + 10,
-                    opacity: glowAnimations[tab.id].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 0.4],
-                    }),
-                  },
-                ]}
-              />
-              
               {/* Main button content */}
               <Animated.View
                 style={[
@@ -346,7 +221,6 @@ const BottomNavigation = ({ onTabPress }) => {
                     styles.icon,
                     {
                       fontSize: responsiveSize.iconSize,
-                      opacity: isActive ? 1 : 0.8,
                     },
                     isActive && styles.activeIcon,
                   ]}
@@ -358,7 +232,6 @@ const BottomNavigation = ({ onTabPress }) => {
                     styles.label,
                     {
                       fontSize: responsiveSize.fontSize,
-                      opacity: isActive ? 1 : 0.8,
                     },
                     isActive && styles.activeLabel,
                   ]}
@@ -367,21 +240,12 @@ const BottomNavigation = ({ onTabPress }) => {
                 </Animated.Text>
                 
                 {/* Active indicator dot */}
-                {isActive && (
-                  <Animated.View 
-                    style={[
-                      styles.activeIndicator,
-                      {
-                        opacity: glowAnimations[tab.id],
-                      }
-                    ]} 
-                  />
-                )}
+                {isActive && <View style={styles.activeIndicator} />}
               </Animated.View>
             </TouchableOpacity>
           );
         })}
-      </Animated.View>
+      </View>
     </View>
   );
 };
@@ -389,15 +253,15 @@ const BottomNavigation = ({ onTabPress }) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 25, // More space from bottom
-    left: 15,   // Less margin for wider nav
-    right: 15,  // Less margin for wider nav
+    bottom: 25,
+    left: 15,
+    right: 15,
     zIndex: 1000,
     alignItems: 'center',
     justifyContent: 'center',
   },
   navBar: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // More transparent like macOS dock
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     backdropFilter: 'blur(25px)',
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -420,43 +284,20 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginHorizontal: 2,
   },
-
+  activeTab: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
   buttonContent: {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
   },
-
-  slidingIndicator: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    zIndex: 1,
-    left: 15,
-    top: 12,
-  },
-
   rippleEffect: {
     position: 'absolute',
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     zIndex: 2,
     top: -20,
     left: -20,
-  },
-
-  glowEffect: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: 'rgba(255, 255, 255, 0.5)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 15,
-    zIndex: 1,
-    top: -10,
-    left: -10,
-  },
-  activeTab: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    transform: [{ scale: 1.1 }], // Slight scale up like macOS dock
   },
   icon: {
     marginBottom: 3,
