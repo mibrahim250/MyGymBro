@@ -91,16 +91,6 @@ const BottomNavigation = ({ onTabPress }) => {
           borderRadius: responsiveSize.borderRadius,
         }
       ]}>
-        {/* Gradient overlay for center-clear, edge-dark effect */}
-        <View style={[
-          styles.gradientOverlay,
-          {
-            width: responsiveSize.navWidth - 4,
-            height: responsiveSize.navHeight - 4,
-            borderRadius: responsiveSize.borderRadius - 2,
-          }
-        ]} />
-        
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           
