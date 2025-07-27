@@ -6,13 +6,16 @@ import { nutritionService } from './src/services/nutritionService';
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [email, setEmail] = useState('test@example.com');
+  const [email, setEmail] = useState('test@mygymbro.com');
   const [password, setPassword] = useState('password123');
   const [calories, setCalories] = useState('');
   const [foodName, setFoodName] = useState('');
-  const [workoutName, setWorkoutName] = useState('');
+  const [exerciseName, setExerciseName] = useState('');
+  const [sets, setSets] = useState('3');
+  const [reps, setReps] = useState('10');
   const [exercises, setExercises] = useState([]);
   const [todayCalories, setTodayCalories] = useState([]);
+  const [workouts, setWorkouts] = useState([]);
 
   // Check if user is logged in on app start
   useEffect(() => {
@@ -22,6 +25,7 @@ export default function App() {
     const { data: authListener } = authService.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user);
+        loadUserData();
       } else {
         setUser(null);
       }
@@ -33,36 +37,67 @@ export default function App() {
   }, []);
 
   const checkUser = async () => {
-    const { user } = await authService.getCurrentUser();
-    setUser(user);
+    try {
+      const { user, profile } = await authService.getCurrentUser();
+      setUser(user);
+      if (user) {
+        loadUserData();
+      }
+    } catch (error) {
+      console.error('Error checking user:', error);
+    }
+  };
+
+  const loadUserData = async () => {
+    await getTodayCalories();
+    await getWorkouts();
   };
 
   const handleSignUp = async () => {
-    const { data, error } = await authService.signUp(email, password);
-    if (error) {
-      Alert.alert('Sign Up Error', error.message);
-    } else {
-      Alert.alert('Success', 'Check your email to confirm your account!');
+    try {
+      const { data, error } = await authService.signUp(email, password, {
+        firstName: 'Test',
+        lastName: 'User'
+      });
+      
+      if (error) {
+        Alert.alert('Sign Up Error', error.message);
+      } else {
+        Alert.alert('Success', 'Account created! Check your email to verify.');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
 
   const handleSignIn = async () => {
-    const { data, error } = await authService.signIn(email, password);
-    if (error) {
-      Alert.alert('Sign In Error', error.message);
-    } else {
-      Alert.alert('Success', 'Signed in successfully!');
-      setUser(data.user);
+    try {
+      const { data, error } = await authService.signIn(email, password);
+      if (error) {
+        Alert.alert('Sign In Error', error.message);
+      } else {
+        Alert.alert('Success', 'Signed in successfully!');
+        setUser(data.user);
+        loadUserData();
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
 
   const handleSignOut = async () => {
-    const { error } = await authService.signOut();
-    if (error) {
-      Alert.alert('Sign Out Error', error.message);
-    } else {
-      setUser(null);
-      Alert.alert('Success', 'Signed out successfully!');
+    try {
+      const { error } = await authService.signOut();
+      if (error) {
+        Alert.alert('Sign Out Error', error.message);
+      } else {
+        setUser(null);
+        setTodayCalories([]);
+        setWorkouts([]);
+        Alert.alert('Success', 'Signed out successfully!');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -72,55 +107,83 @@ export default function App() {
       return;
     }
 
-    const { data, error } = await nutritionService.saveCalorieEntry({
-      food_name: foodName,
-      calories: parseInt(calories),
-      meal_type: 'snack',
-    });
+    try {
+      const { data, error } = await nutritionService.saveCalorieEntry({
+        food_name: foodName,
+        calories: parseInt(calories),
+      });
 
-    if (error) {
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Success', 'Food entry saved!');
+        setCalories('');
+        setFoodName('');
+        getTodayCalories();
+      }
+    } catch (error) {
       Alert.alert('Error', error.message);
-    } else {
-      Alert.alert('Success', 'Calories added!');
-      setCalories('');
-      setFoodName('');
-      getTodayCalories();
     }
   };
 
   const getTodayCalories = async () => {
-    const { data, error } = await nutritionService.getTodayCalories();
-    if (!error && data) {
-      setTodayCalories(data);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const entries = await nutritionService.getNutritionByDate(today);
+      setTodayCalories(entries);
+    } catch (error) {
+      console.error('Error getting calories:', error);
     }
   };
 
   const addWorkout = async () => {
-    if (!workoutName) {
-      Alert.alert('Error', 'Please enter workout name');
+    if (!exerciseName || !sets || !reps) {
+      Alert.alert('Error', 'Please enter exercise name, sets, and reps');
       return;
     }
 
-    const { data, error } = await workoutService.saveWorkout({
-      name: workoutName,
-      duration_minutes: 30,
-      exercises: ['Push ups', 'Squats'],
-    });
+    try {
+      const { data, error } = await workoutService.saveWorkout({
+        exercise_name: exerciseName,
+        sets: parseInt(sets),
+        reps: parseInt(reps),
+        date: new Date().toISOString().split('T')[0],
+      });
 
-    if (error) {
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Success', 'Workout saved!');
+        setExerciseName('');
+        setSets('3');
+        setReps('10');
+        getWorkouts();
+      }
+    } catch (error) {
       Alert.alert('Error', error.message);
-    } else {
-      Alert.alert('Success', 'Workout saved!');
-      setWorkoutName('');
+    }
+  };
+
+  const getWorkouts = async () => {
+    try {
+      const userWorkouts = await workoutService.getUserWorkouts();
+      setWorkouts(userWorkouts);
+    } catch (error) {
+      console.error('Error getting workouts:', error);
     }
   };
 
   const getExercises = async () => {
-    const { data, error } = await workoutService.getExercises();
-    if (!error && data) {
-      setExercises(data);
-    } else if (error) {
-      Alert.alert('Info', 'No exercises found or table not created yet');
+    try {
+      const { data, error } = await workoutService.getExercises();
+      if (!error && data) {
+        setExercises(data);
+        Alert.alert('Success', `Found ${data.length} exercises`);
+      } else {
+        Alert.alert('Info', 'No exercises found or table not created yet');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -128,10 +191,10 @@ export default function App() {
     // Auth Screen
     return (
       <ScrollView style={styles.container}>
-        <Text style={styles.title}>🏋️ GYMBRO Auth Test</Text>
+        <Text style={styles.title}>🏋️ MyGymBro Backend Test</Text>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Authentication</Text>
+          <Text style={styles.sectionTitle}>🔐 Authentication Test</Text>
           
           <TextInput
             style={styles.input}
@@ -157,6 +220,10 @@ export default function App() {
           <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={handleSignUp}>
             <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
+          
+          <Text style={styles.helperText}>
+            Test credentials: test@mygymbro.com / password123
+          </Text>
         </View>
       </ScrollView>
     );
@@ -165,10 +232,10 @@ export default function App() {
   // Main App Screen (when logged in)
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>🏋️ GYMBRO Dashboard</Text>
+      <Text style={styles.title}>🏋️ MyGymBro Backend Test</Text>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Welcome, {user.email}!</Text>
+        <Text style={styles.sectionTitle}>✅ Logged in as: {user.email}</Text>
         <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleSignOut}>
           <Text style={styles.buttonText}>Sign Out</Text>
         </TouchableOpacity>
@@ -176,72 +243,109 @@ export default function App() {
 
       {/* Nutrition Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🍎 Nutrition Tracker</Text>
+        <Text style={styles.sectionTitle}>🍎 Nutrition Test</Text>
         
         <TextInput
           style={styles.input}
-          placeholder="Food name"
+          placeholder="Food name (e.g., Banana)"
           value={foodName}
           onChangeText={setFoodName}
         />
         
         <TextInput
           style={styles.input}
-          placeholder="Calories"
+          placeholder="Calories (e.g., 105)"
           value={calories}
           onChangeText={setCalories}
           keyboardType="number-pad"
         />
         
         <TouchableOpacity style={styles.button} onPress={addCalories}>
-          <Text style={styles.buttonText}>Add Calories</Text>
+          <Text style={styles.buttonText}>Add Food Entry</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={getTodayCalories}>
-          <Text style={styles.buttonText}>Get Today's Calories</Text>
+          <Text style={styles.buttonText}>Refresh Today's Entries</Text>
         </TouchableOpacity>
         
         {todayCalories.length > 0 && (
           <View style={styles.dataContainer}>
-            <Text style={styles.dataTitle}>Today's Entries:</Text>
+            <Text style={styles.dataTitle}>Today's Food Entries ({todayCalories.length}):</Text>
             {todayCalories.map((entry, index) => (
               <Text key={index} style={styles.dataText}>
                 {entry.food_name}: {entry.calories} cal
               </Text>
             ))}
+            <Text style={styles.totalText}>
+              Total: {todayCalories.reduce((sum, entry) => sum + entry.calories, 0)} calories
+            </Text>
           </View>
         )}
       </View>
 
       {/* Workout Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>💪 Workout Tracker</Text>
+        <Text style={styles.sectionTitle}>💪 Workout Test</Text>
         
         <TextInput
           style={styles.input}
-          placeholder="Workout name"
-          value={workoutName}
-          onChangeText={setWorkoutName}
+          placeholder="Exercise name (e.g., Push-ups)"
+          value={exerciseName}
+          onChangeText={setExerciseName}
         />
+        
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, styles.halfInput]}
+            placeholder="Sets"
+            value={sets}
+            onChangeText={setSets}
+            keyboardType="number-pad"
+          />
+          <TextInput
+            style={[styles.input, styles.halfInput]}
+            placeholder="Reps"
+            value={reps}
+            onChangeText={setReps}
+            keyboardType="number-pad"
+          />
+        </View>
         
         <TouchableOpacity style={styles.button} onPress={addWorkout}>
           <Text style={styles.buttonText}>Save Workout</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={getExercises}>
-          <Text style={styles.buttonText}>Get Exercises</Text>
+        <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={getWorkouts}>
+          <Text style={styles.buttonText}>Refresh Workouts</Text>
         </TouchableOpacity>
         
-        {exercises.length > 0 && (
+        <TouchableOpacity style={[styles.button, styles.infoButton]} onPress={getExercises}>
+          <Text style={styles.buttonText}>Test Exercise Database</Text>
+        </TouchableOpacity>
+        
+        {workouts.length > 0 && (
           <View style={styles.dataContainer}>
-            <Text style={styles.dataTitle}>Available Exercises:</Text>
-            {exercises.map((exercise, index) => (
+            <Text style={styles.dataTitle}>Your Workouts ({workouts.length}):</Text>
+            {workouts.slice(0, 5).map((workout, index) => (
               <Text key={index} style={styles.dataText}>
-                {exercise.name}
+                {workout.exercise_name}: {workout.sets} × {workout.reps}
+                {workout.weight && ` @ ${workout.weight}kg`}
               </Text>
             ))}
+            {workouts.length > 5 && (
+              <Text style={styles.moreText}>... and {workouts.length - 5} more</Text>
+            )}
           </View>
         )}
+      </View>
+
+      {/* Database Status */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>📊 Database Status</Text>
+        <Text style={styles.statusText}>✅ Supabase Connected</Text>
+        <Text style={styles.statusText}>✅ Authentication Working</Text>
+        <Text style={styles.statusText}>✅ Nutrition Service: {todayCalories.length} entries today</Text>
+        <Text style={styles.statusText}>✅ Workout Service: {workouts.length} total workouts</Text>
       </View>
     </ScrollView>
   );
@@ -286,6 +390,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 16,
   },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfInput: {
+    width: '48%',
+  },
   button: {
     backgroundColor: '#007AFF',
     padding: 15,
@@ -299,10 +410,19 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: '#FF3B30',
   },
+  infoButton: {
+    backgroundColor: '#FF9500',
+  },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  helperText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 12,
+    marginTop: 10,
   },
   dataContainer: {
     marginTop: 15,
@@ -318,5 +438,18 @@ const styles = StyleSheet.create({
   dataText: {
     color: '#666',
     marginBottom: 2,
+  },
+  totalText: {
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginTop: 5,
+  },
+  moreText: {
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  statusText: {
+    color: '#34C759',
+    marginBottom: 3,
   },
 });
