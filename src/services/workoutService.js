@@ -1,17 +1,24 @@
 import { supabase } from './supabase';
 
-export const nutritionService = {
-  // Save calorie entry
-  saveCalorieEntry: async (calorieData) => {
+export const workoutService = {
+  // Save workout
+  saveWorkout: async (workoutData) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('calorie_entries')
+        .from('workouts')
         .insert([{
           user_id: user.id,
-          ...calorieData,
+          exercise_name: workoutData.exercise_name,
+          sets: workoutData.sets,
+          reps: workoutData.reps,
+          weight: workoutData.weight || null,
+          duration: workoutData.duration || null,
+          notes: workoutData.notes || null,
+          date: workoutData.date || new Date().toISOString().split('T')[0],
+          created_at: new Date().toISOString(),
         }])
         .select()
         .single();
@@ -22,60 +29,68 @@ export const nutritionService = {
     }
   },
 
-  // Get today's calories
-  getTodayCalories: async () => {
+  // Get user workouts - THIS IS THE METHOD THAT WAS MISSING
+  getUserWorkouts: async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      if (!user) {
+        console.log('No user found');
+        return []; // Return empty array instead of undefined
+      }
 
       const { data, error } = await supabase
-        .from('calorie_entries')
+        .from('workouts')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startOfDay.toISOString())
-        .lte('created_at', endOfDay.toISOString())
         .order('created_at', { ascending: false });
 
-      return { data, error };
+      if (error) {
+        console.error('Error fetching workouts:', error);
+        return []; // Return empty array on error
+      }
+
+      return data || []; // Always return array
     } catch (error) {
-      return { data: null, error };
+      console.error('Error in getUserWorkouts:', error);
+      return []; // Return empty array on exception
     }
   },
 
-  // Get calorie entries by date range
-  getCalorieEntries: async (startDate, endDate) => {
+  // Get workouts by date
+  getWorkoutsByDate: async (date) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) return [];
 
       const { data, error } = await supabase
-        .from('calorie_entries')
+        .from('workouts')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate)
+        .eq('date', date)
         .order('created_at', { ascending: false });
 
-      return { data, error };
+      if (error) {
+        console.error('Error fetching workouts by date:', error);
+        return [];
+      }
+
+      return data || [];
     } catch (error) {
-      return { data: null, error };
+      console.error('Error in getWorkoutsByDate:', error);
+      return [];
     }
   },
 
-  // Delete calorie entry
-  deleteCalorieEntry: async (entryId) => {
+  // Delete workout
+  deleteWorkout: async (workoutId) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('calorie_entries')
+        .from('workouts')
         .delete()
-        .eq('id', entryId)
+        .eq('id', workoutId)
         .eq('user_id', user.id);
 
       return { data, error };
@@ -84,58 +99,17 @@ export const nutritionService = {
     }
   },
 
-  // Update calorie entry
-  updateCalorieEntry: async (entryId, updates) => {
+  // Get exercises from exercises table
+  getExercises: async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
-        .from('calorie_entries')
-        .update(updates)
-        .eq('id', entryId)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      return { data, error };
-    } catch (error) {
-      return { data: null, error };
-    }
-  },
-
-  // Get weekly nutrition summary
-  getWeeklyNutritionSummary: async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-
-      const { data, error } = await supabase
-        .from('calorie_entries')
+        .from('exercises')
         .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', weekAgo.toISOString())
-        .order('created_at', { ascending: false });
+        .order('name');
 
-      if (error) throw error;
-
-      // Group by day and calculate totals
-      const dailyTotals = data.reduce((acc, entry) => {
-        const date = new Date(entry.created_at).toDateString();
-        if (!acc[date]) {
-          acc[date] = { calories: 0, entries: 0 };
-        }
-        acc[date].calories += entry.calories || 0;
-        acc[date].entries += 1;
-        return acc;
-      }, {});
-
-      return { data: dailyTotals, error: null };
+      return { data: data || [], error };
     } catch (error) {
-      return { data: null, error };
+      return { data: [], error };
     }
   },
 };
