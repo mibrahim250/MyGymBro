@@ -1,0 +1,39 @@
+{
+  "name": "untitled",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mibrahim250/MyGymBro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mibrahim250/MyGymBro/issues"
+  },
+  "homepage": "https://github.com/mibrahim250/MyGymBro#readme",
+  "description": "",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/bottom-tabs": "^7.4.4",
+    "@react-navigation/native": "^7.1.16",
+    "@react-navigation/stack": "^7.4.4",
+    "@supabase/supabase-js": "^2.52.1",
+    "react": "^19.1.0",
+    "react-native": "^0.80.2",
+    "react-native-dotenv": "^3.4.11",
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-screens": "^4.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/runtime": "^7.28.2",
+    "@react-native/babel-preset": "^0.80.2",
+    "@react-native/metro-config": "^0.80.2",
+    "metro-react-native-babel-preset": "^0.77.0"
+  }
+}
