@@ -8,10 +8,31 @@ import {
   Platform,
 } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// Dynamic sizing based on screen size
+const getResponsiveSize = () => {
+  const isSmallScreen = width < 375; // iPhone SE, small phones
+  const isMediumScreen = width >= 375 && width < 414; // iPhone 12/13/14
+  const isLargeScreen = width >= 414; // iPhone Plus, Pro Max, tablets
+  
+  return {
+    navHeight: isSmallScreen ? 50 : isMediumScreen ? 55 : 60,
+    bottomPadding: Platform.OS === 'ios' ? 
+      (isSmallScreen ? 15 : isMediumScreen ? 18 : 20) : 
+      (isSmallScreen ? 6 : isMediumScreen ? 7 : 8),
+    topPadding: isSmallScreen ? 4 : isMediumScreen ? 5 : 6,
+    iconSize: isSmallScreen ? 16 : isMediumScreen ? 17 : 18,
+    fontSize: isSmallScreen ? 8 : isMediumScreen ? 8.5 : 9,
+    buttonWidth: isSmallScreen ? 45 : isMediumScreen ? 47 : 50,
+    borderRadius: isSmallScreen ? 18 : isMediumScreen ? 19 : 20,
+    horizontalPadding: Math.max(10, width * 0.025), // 2.5% of screen width, minimum 10
+  };
+};
 
 const BottomNavigation = ({ onTabPress }) => {
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const responsiveSize = getResponsiveSize();
 
   const tabs = [
     { id: 'Dashboard', label: 'Home', icon: '📊' },
@@ -29,12 +50,23 @@ const BottomNavigation = ({ onTabPress }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.navBar}>
+      <View style={[styles.navBar, {
+        height: responsiveSize.navHeight,
+        paddingTop: responsiveSize.topPadding,
+        paddingBottom: responsiveSize.bottomPadding,
+        paddingHorizontal: responsiveSize.horizontalPadding,
+        borderTopLeftRadius: responsiveSize.borderRadius,
+        borderTopRightRadius: responsiveSize.borderRadius,
+      }]}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.id}
             style={[
               styles.tabButton,
+              {
+                minWidth: responsiveSize.buttonWidth,
+                borderRadius: responsiveSize.borderRadius * 0.5,
+              },
               activeTab === tab.id && styles.activeTab,
             ]}
             onPress={() => handleTabPress(tab.id)}
@@ -42,12 +74,18 @@ const BottomNavigation = ({ onTabPress }) => {
           >
             <Text style={[
               styles.icon,
+              {
+                fontSize: responsiveSize.iconSize,
+              },
               activeTab === tab.id && styles.activeIcon
             ]}>
               {tab.icon}
             </Text>
             <Text style={[
               styles.label,
+              {
+                fontSize: responsiveSize.fontSize,
+              },
               activeTab === tab.id && styles.activeLabel
             ]}>
               {tab.label}
@@ -71,8 +109,6 @@ const styles = StyleSheet.create({
   navBar: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     backdropFilter: 'blur(20px)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     borderWidth: 0.3,
     borderColor: 'rgba(255, 255, 255, 0.05)',
     shadowColor: '#000',
@@ -84,20 +120,14 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 15,
     flexDirection: 'row',
-    paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 15,
-    paddingHorizontal: 15,
     justifyContent: 'space-around',
     alignItems: 'center',
-    height: Platform.OS === 'ios' ? 85 : 65,
   },
   tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-    minWidth: 65,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     position: 'relative',
   },
   activeTab: {
@@ -105,8 +135,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.02 }],
   },
   icon: {
-    fontSize: 22,
-    marginBottom: 4,
+    marginBottom: 2,
     opacity: 0.7,
   },
   activeIcon: {
@@ -116,7 +145,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   label: {
-    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.7)',
     fontWeight: '500',
     textAlign: 'center',
