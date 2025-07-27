@@ -33,22 +33,22 @@ const getResponsiveSize = () => {
 };
 
 const BottomNavigation = ({ onTabPress }) => {
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState('Home');
   const responsiveSize = getResponsiveSize();
 
   // Animation values for each tab (simplified)
   const tabAnimations = useRef({
-    Dashboard: new Animated.Value(1),
-    Workouts: new Animated.Value(1),
-    Nutrition: new Animated.Value(1),
-    Profile: new Animated.Value(1),
+    Home: new Animated.Value(1),
+    Overview: new Animated.Value(1),
+    Calendar: new Animated.Value(1),
+    Settings: new Animated.Value(1),
   }).current;
 
   const tabs = [
-    { id: 'Dashboard', label: 'Home', icon: '📊' },
-    { id: 'Workouts', label: 'Workouts', icon: '💪' },
-    { id: 'Nutrition', label: 'Nutrition', icon: '🥗' },
-    { id: 'Profile', label: 'Profile', icon: '👤' }
+    { id: 'Home', label: 'Home', icon: '⌂' },
+    { id: 'Overview', label: 'Overview', icon: '◫' },
+    { id: 'Calendar', label: 'Calendar', icon: '□' },
+    { id: 'Settings', label: 'Settings', icon: '○' }
   ];
 
   // Haptic feedback function
