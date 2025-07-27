@@ -1,13 +1,23 @@
-export const colors = {
-  primary: '#FF6B35',
-  secondary: '#004E89',
-  accent: '#FFE66D',
-  background: '#F7F9FC',
+// src/styles/colors.js
+
+export const darkTheme = {
+  mode: 'dark',
+  background: '#121212',
+  surface: '#1F1F1F',
+  primary: '#FF86C8',
+  accent: '#FF86C8',
+  text: '#FFFFFF',
+  textSecondary: '#BBBBBB',
+  border: '#333333',
+};
+
+export const lightTheme = {
+  mode: 'light',
+  background: '#FFF7F9',
   surface: '#FFFFFF',
-  text: '#1C2541',
-  textSecondary: '#6C757D',
-  success: '#28A745',
-  warning: '#FFC107',
-  error: '#DC3545',
-  border: '#E9ECEF',
+  primary: '#FF86C8',
+  accent: '#FF86C8',
+  text: '#1C1C1E',
+  textSecondary: '#333',
+  border: '#F1F1F1',
 };
