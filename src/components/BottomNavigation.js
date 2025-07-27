@@ -36,20 +36,12 @@ const BottomNavigation = ({ onTabPress }) => {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const responsiveSize = getResponsiveSize();
 
-  // Animation values for each tab
+  // Animation values for each tab (simplified)
   const tabAnimations = useRef({
     Dashboard: new Animated.Value(1),
     Workouts: new Animated.Value(1),
     Nutrition: new Animated.Value(1),
     Profile: new Animated.Value(1),
-  }).current;
-
-  // Ripple effect animations
-  const rippleAnimations = useRef({
-    Dashboard: new Animated.Value(0),
-    Workouts: new Animated.Value(0),
-    Nutrition: new Animated.Value(0),
-    Profile: new Animated.Value(0),
   }).current;
 
   const tabs = [
@@ -68,39 +60,9 @@ const BottomNavigation = ({ onTabPress }) => {
     }
   };
 
-  // Ripple effect
-  const createRipple = (tabId) => {
-    rippleAnimations[tabId].setValue(0);
-    Animated.timing(rippleAnimations[tabId], {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start(() => {
-      rippleAnimations[tabId].setValue(0);
-    });
-  };
-
   const handleTabPress = (tabId) => {
     // Haptic feedback
     triggerHaptic(activeTab === tabId ? 'medium' : 'light');
-    
-    // Create ripple effect
-    createRipple(tabId);
-    
-    // Bouncy animation
-    Animated.sequence([
-      Animated.timing(tabAnimations[tabId], {
-        toValue: 0.7,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(tabAnimations[tabId], {
-        toValue: 1,
-        tension: 300,
-        friction: 4,
-        useNativeDriver: true,
-      }),
-    ]).start();
     
     // Set active tab
     setActiveTab(tabId);
@@ -113,39 +75,7 @@ const BottomNavigation = ({ onTabPress }) => {
   // Long press handler
   const handleLongPress = (tabId) => {
     triggerHaptic('heavy');
-    
-    // Pulse animation for long press
-    Animated.sequence([
-      Animated.timing(tabAnimations[tabId], {
-        toValue: 1.3,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tabAnimations[tabId], {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
     console.log(`🔥 Long pressed: ${tabId} - Add special action here!`);
-  };
-
-  // Press in/out handlers for hover effects
-  const handlePressIn = (tabId) => {
-    Animated.timing(tabAnimations[tabId], {
-      toValue: 1.1,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = (tabId) => {
-    Animated.timing(tabAnimations[tabId], {
-      toValue: 1,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
   };
 
   return (
@@ -178,45 +108,12 @@ const BottomNavigation = ({ onTabPress }) => {
               ]}
               onPress={() => handleTabPress(tab.id)}
               onLongPress={() => handleLongPress(tab.id)}
-              onPressIn={() => handlePressIn(tab.id)}
-              onPressOut={() => handlePressOut(tab.id)}
               activeOpacity={0.7}
               delayLongPress={500}
             >
-              {/* Ripple effect */}
-              <Animated.View
-                style={[
-                  styles.rippleEffect,
-                  {
-                    width: responsiveSize.buttonSize * 2,
-                    height: responsiveSize.buttonSize * 2,
-                    borderRadius: responsiveSize.buttonSize,
-                    opacity: rippleAnimations[tab.id].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 0.3],
-                    }),
-                    transform: [
-                      {
-                        scale: rippleAnimations[tab.id].interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 1],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-              
               {/* Main button content */}
-              <Animated.View
-                style={[
-                  styles.buttonContent,
-                  {
-                    transform: [{ scale: tabAnimations[tab.id] }],
-                  },
-                ]}
-              >
-                <Animated.Text
+              <View style={styles.buttonContent}>
+                <Text
                   style={[
                     styles.icon,
                     {
@@ -226,8 +123,8 @@ const BottomNavigation = ({ onTabPress }) => {
                   ]}
                 >
                   {tab.icon}
-                </Animated.Text>
-                <Animated.Text
+                </Text>
+                <Text
                   style={[
                     styles.label,
                     {
@@ -237,11 +134,11 @@ const BottomNavigation = ({ onTabPress }) => {
                   ]}
                 >
                   {tab.label}
-                </Animated.Text>
+                </Text>
                 
                 {/* Active indicator dot */}
                 {isActive && <View style={styles.activeIndicator} />}
-              </Animated.View>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -291,13 +188,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
-  },
-  rippleEffect: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    zIndex: 2,
-    top: -20,
-    left: -20,
   },
   icon: {
     marginBottom: 3,
