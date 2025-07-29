@@ -39,16 +39,16 @@ const BottomNavigation = ({ onTabPress }) => {
   // Animation values for each tab (simplified)
   const tabAnimations = useRef({
     Home: new Animated.Value(1),
-    Overview: new Animated.Value(1),
     Calendar: new Animated.Value(1),
-    Settings: new Animated.Value(1),
+    Tracker: new Animated.Value(1),
+    Profile: new Animated.Value(1),
   }).current;
 
   const tabs = [
     { id: 'Home', label: 'Home', icon: '⌂' },
-    { id: 'Overview', label: 'Overview', icon: '◫' },
-    { id: 'Calendar', label: 'Calendar', icon: '□' },
-    { id: 'Settings', label: 'Settings', icon: '○' }
+    { id: 'Calendar', label: 'Calendar', icon: '◫' },
+    { id: 'Tracker', label: 'Tracker', icon: '□' },
+    { id: 'Profile', label: 'Profile', icon: '○' }
   ];
 
   // Haptic feedback function

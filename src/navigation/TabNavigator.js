@@ -1,131 +1,39 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
 import { Text } from 'react-native';
-import { colors } from '../styles/colors';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-// Import screens
-import DashboardScreen from '../screens/dashboard/DashboardScreen';
-import WorkoutListScreen from '../screens/workouts/WorkoutListScreen';
-import AddWorkoutScreen from '../screens/workouts/AddWorkoutScreen';
-import WorkoutDetailScreen from '../screens/workouts/WorkoutDetailScreen';
-import NutritionScreen from '../screens/nutrition/NutritionScreen';
-import AddFoodScreen from '../screens/nutrition/AddFoodScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
+/* top-level screens – stub the files you haven’t built yet */
+import DashboardScreen  from '../screens/dashboard/DashboardScreen';
+import NutritionScreen  from '../screens/nutrition/NutritionScreen';
+import WorkoutStack     from './WorkoutStack';        // see section 3
+import TrackerScreen    from '../screens/workouts/TrackerScreen';
+import ProfileScreen    from '../screens/profile/ProfileScreen';
 
-// Create navigators
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
 
-// Workout Stack Navigator
-const WorkoutStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="WorkoutList" component={WorkoutListScreen} />
-      <Stack.Screen name="AddWorkout" component={AddWorkoutScreen} />
-      <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} />
-    </Stack.Navigator>
-  );
+/* quick emoji icons until you plug in vector-icons */
+const Icon = ({ route, color }) => {
+  const emoji = {
+    Dashboard:'🏠', Workouts:'💪', Nutrition:'🍎', Tracker:'📝', Profile:'👤'
+  }[route.name] || '❓';
+  return <Text style={{ fontSize:22,color }}>{emoji}</Text>;
 };
 
-// Nutrition Stack Navigator
-const NutritionStack = () => {
+export default function TabNavigator({ onLogout }) {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="NutritionMain" component={NutritionScreen} />
-      <Stack.Screen name="AddFood" component={AddFoodScreen} />
-    </Stack.Navigator>
-  );
-};
-
-// Simple tab icon component (you can replace with actual icons later)
-const TabIcon = ({ name, color }) => {
-  const getIcon = () => {
-    switch (name) {
-      case 'dashboard':
-        return '📊';
-      case 'workouts':
-        return '💪';
-      case 'nutrition':
-        return '🍎';
-      case 'profile':
-        return '👤';
-      default:
-        return '📱';
-    }
-  };
-
-  return (
-    <Text style={{ fontSize: 20, color }}>
-      {getIcon()}
-    </Text>
-  );
-};
-
-// Tab Navigator
-const TabNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 60,
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
-      }}
-    >
-      <Tab.Screen 
-        name="Dashboard" 
-        component={DashboardScreen}
-        options={{
-          tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="dashboard" color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Workouts" 
-        component={WorkoutStack}
-        options={{
-          tabBarLabel: 'Workouts',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="workouts" color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Nutrition" 
-        component={NutritionStack}
-        options={{
-          tabBarLabel: 'Nutrition',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="nutrition" color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="profile" color={color} />
-          ),
-        }}
-      />
+    <Tab.Navigator screenOptions={({ route }) => ({
+      headerShown:false,
+      tabBarShowLabel:false,
+      tabBarStyle:{ backgroundColor:'rgba(0,0,0,0.7)', height:70, borderTopWidth:0 },
+      tabBarIcon: ({ color }) => <Icon route={route} color={color}/>
+    })}>
+      <Tab.Screen name="Dashboard" component={DashboardScreen}/>
+      <Tab.Screen name="Workouts"  component={WorkoutStack}/>
+      <Tab.Screen name="Nutrition" component={NutritionScreen}/>
+      <Tab.Screen name="Tracker"   component={TrackerScreen}/>
+      <Tab.Screen name="Profile">
+        {() => <ProfileScreen onLogout={onLogout}/>}
+      </Tab.Screen>
     </Tab.Navigator>
   );
-};
-
-export default TabNavigator;
+}

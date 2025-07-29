@@ -1,25 +1,29 @@
-// App.js - Minimal version with just Bottom Navigation
-import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  ScrollView, Alert, StyleSheet, StatusBar
-} from 'react-native';
-
+import React, { useEffect, useState } from 'react';
+import { StatusBar, View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+import { NavigationContainer } from '@react-navigation/native';
+import { colors } from './src/styles/colors';
 import { authService } from './src/services/authService';
+import TabNavigator from './src/navigation/TabNavigator';
 
-// Bottom Navigation Component
-import BottomNavigation from './src/components/BottomNavigation';
+const theme = {
+  colors: {
+    primary: colors.primary,
+    accent: colors.accent,
+    background: colors.background,
+    surface: colors.surface,
+    text: colors.text,
+  },
+};
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState('test@mygymbro.com');
   const [password, setPassword] = useState('password123');
-  const [currentTab, setCurrentTab] = useState('Dashboard');
 
-  // ---------- auth listener ----------
   useEffect(() => {
     checkUser();
-    const { data: listener } = authService.onAuthStateChange((_evt, session) => {
+    const { data: listener } = authService.onAuthStateChange((_event, session) => {
       session?.user ? setUser(session.user) : setUser(null);
     });
     return () => listener?.subscription?.unsubscribe();
@@ -29,64 +33,61 @@ export default function App() {
     try {
       const { user } = await authService.getCurrentUser();
       setUser(user);
-    } catch (e) { console.error(e); }
-  };
-
-  // Handle bottom navigation tab press
-  const handleTabPress = (tabId) => {
-    console.log('Tab pressed:', tabId);
-    setCurrentTab(tabId);
-  };
-
-  // ---------- auth actions ----------
-  const handleSignUp = async () => {
-    try {
-      const { error } = await authService.signUp(email, password, { firstName: 'Test', lastName: 'User' });
-      error ? Alert.alert('Sign-Up Error', error.message)
-            : Alert.alert('Success', 'Account created! Check email.');
-    } catch (e) { Alert.alert('Error', e.message); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSignIn = async () => {
     try {
       const { data, error } = await authService.signIn(email, password);
-      error ? Alert.alert('Sign-In Error', error.message)
-            : setUser(data.user);
-    } catch (e) { Alert.alert('Error', e.message); }
+      if (error) Alert.alert('Sign-In Error', error.message);
+      else setUser(data.user);
+    } catch (err) {
+      Alert.alert('Error', err.message);
+    }
   };
 
-  const handleSignOut = async () => {
+  const handleSignUp = async () => {
     try {
-      const { error } = await authService.signOut();
-      error ? Alert.alert('Sign-Out Error', error.message)
-            : setUser(null);
-    } catch (e) { Alert.alert('Error', e.message); }
+      const { error } = await authService.signUp(email, password, {
+        firstName: 'Test',
+        lastName: 'User',
+      });
+      if (error) Alert.alert('Sign-Up Error', error.message);
+      else Alert.alert('Success', 'Account created! Check your email.');
+    } catch (err) {
+      Alert.alert('Error', err.message);
+    }
   };
 
-  // ---------- Login Screen ----------
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      setUser(null);
+    } catch (err) {
+      Alert.alert('Logout Error', err.message);
+    }
+  };
+
   if (!user) {
     return (
-      <View style={styles.mainContainer}>
-        <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-          <StatusBar barStyle="light-content" />
-          <Text style={[styles.title, { color: '#FF86C8' }]}>🏋️ MyGymBro Backend Test</Text>
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: '#FF86C8' }]}>🔐 Authentication</Text>
+      <PaperProvider theme={theme}>
+        <NavigationContainer>
+          <View style={styles.container}>
+            <Text style={styles.title}>MyGymBro</Text>
 
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor="#BBBBBB"
+              placeholderTextColor="#aaa"
               value={email}
               onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
             />
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor="#BBBBBB"
+              placeholderTextColor="#aaa"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -95,148 +96,56 @@ export default function App() {
             <TouchableOpacity style={styles.button} onPress={handleSignIn}>
               <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={handleSignUp}>
+
+            <TouchableOpacity style={[styles.button, { backgroundColor: colors.secondary }]} onPress={handleSignUp}>
               <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
-
-            <Text style={styles.helperText}>Test: test@mygymbro.com / password123</Text>
           </View>
-        </ScrollView>
-      </View>
+        </NavigationContainer>
+      </PaperProvider>
     );
   }
 
-  // ---------- Main App (Logged In) ----------
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.contentContainer}>
-        <StatusBar barStyle="light-content" />
-        
-        {/* Simple logged in content */}
-        <View style={styles.centerContent}>
-          <Text style={[styles.title, { color: '#FF86C8' }]}>🏋️ MyGymBro</Text>
-          
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>✅ Logged in as:</Text>
-            <Text style={styles.userEmail}>{user.email}</Text>
-            
-            <Text style={styles.currentTabText}>Current Tab: {currentTab}</Text>
-            
-            <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleSignOut}>
-              <Text style={styles.buttonText}>Sign Out</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation onTabPress={handleTabPress} />
-    </View>
+    <PaperProvider theme={theme}>
+      <NavigationContainer>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+        <TabNavigator onLogout={handleLogout} />
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
 
-/* ------------ Styles ------------ */
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  
   container: {
     flex: 1,
-    backgroundColor: '#121212',
-    padding: 20,
-    paddingTop: 50,
-  },
-
-  contentContainer: {
-    flex: 1,
-    backgroundColor: '#121212',
-    padding: 20,
-    paddingTop: 50,
-  },
-
-  centerContent: {
-    flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 20,
   },
-
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-
-  section: {
-    backgroundColor: '#1F1F1F',
-    padding: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    minWidth: '90%',
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#FFFFFF',
-    textAlign: 'center',
-  },
-
-  userEmail: {
-    fontSize: 16,
-    color: '#FF86C8',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-
-  currentTabText: {
-    fontSize: 14,
-    color: '#BBBBBB',
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.primary,
     marginBottom: 30,
     textAlign: 'center',
   },
-
   input: {
-    borderWidth: 1,
-    borderColor: '#444',
-    color: '#FFFFFF',
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 8,
-    fontSize: 16,
-    width: '100%',
-  },
-
-  button: {
-    backgroundColor: '#FF86C8',
+    backgroundColor: '#f1f1f1',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 10,
+    marginBottom: 12,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
     alignItems: 'center',
-    marginBottom: 10,
-    minWidth: 200,
   },
-
-  secondaryButton: { 
-    backgroundColor: '#34C759' 
-  },
-
-  dangerButton: { 
-    backgroundColor: '#FF3B30' 
-  },
-
-  buttonText: { 
-    color: '#fff', 
-    fontSize: 16, 
-    fontWeight: 'bold' 
-  },
-
-  helperText: { 
-    textAlign: 'center', 
-    color: '#BBBBBB', 
-    fontSize: 12, 
-    marginTop: 10 
+  buttonText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });
